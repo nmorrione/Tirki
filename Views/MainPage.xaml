@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="Tirki.Views.MainPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Tirki.ViewModels"
+    xmlns:models="clr-namespace:Tirki.Models"
+    x:DataType="vm:TransactionsViewModel"
+    Title="Tirki">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem Text="+" Command="{Binding AddTransactionCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <Grid RowDefinitions="Auto,*">
+
+        <VerticalStackLayout Grid.Row="0" Padding="20" Spacing="4" BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#3D1F9E}">
+            <Label Text="Saldo attuale" TextColor="White" Opacity="0.8" FontSize="14" />
+            <Label Text="{Binding Balance, Converter={StaticResource CurrencyConverter}}" TextColor="White" FontSize="34" FontAttributes="Bold" />
+        </VerticalStackLayout>
+
+        <RefreshView Grid.Row="1" IsRefreshing="{Binding IsBusy}" Command="{Binding LoadCommand}">
+            <CollectionView ItemsSource="{Binding Groups}" IsGrouped="True">
+
+                <CollectionView.GroupHeaderTemplate>
+                    <DataTemplate x:DataType="{x:Type vm:TransactionGroup}">
+                        <Grid ColumnDefinitions="*,Auto" Padding="16,10" BackgroundColor="{AppThemeBinding Light=#F2F2F7, Dark=#1C1C1E}">
+                            <Label Text="{Binding Name}" FontAttributes="Bold" />
+                            <Label Grid.Column="1" Text="{Binding Total, Converter={StaticResource CurrencyConverter}}" FontAttributes="Bold" />
+                        </Grid>
+                    </DataTemplate>
+                </CollectionView.GroupHeaderTemplate>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Transaction">
+                        <SwipeView>
+                            <SwipeView.RightItems>
+                                <SwipeItems>
+                                    <SwipeItem
+                                        Text="Elimina"
+                                        BackgroundColor="#D9534F"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TransactionsViewModel}}, Path=DeleteTransactionCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+
+                            <Grid Padding="16,12" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto">
+                                <Grid.GestureRecognizers>
+                                    <TapGestureRecognizer
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TransactionsViewModel}}, Path=EditTransactionCommand}"
+                                        CommandParameter="{Binding .}" />
+                                </Grid.GestureRecognizers>
+
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding Description}" FontSize="16" />
+                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding Date, StringFormat='{0:d MMM yyyy}'}" FontSize="12" Opacity="0.6" />
+                                <Label
+                                    Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
+                                    Text="{Binding Amount, Converter={StaticResource CurrencyConverter}}"
+                                    VerticalTextAlignment="Center"
+                                    FontAttributes="Bold" />
+                            </Grid>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+
+            </CollectionView>
+        </RefreshView>
+    </Grid>
+
+</ContentPage>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="Tirki.Views.TransactionEditPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Tirki.ViewModels"
+    x:DataType="vm:TransactionEditViewModel"
+    Title="{Binding Title}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <Label Text="Descrizione" FontAttributes="Bold" />
+            <Entry Text="{Binding Description}" Placeholder="Es. Spesa, Stipendio, Affitto..." />
+
+            <Label Text="Data" FontAttributes="Bold" />
+            <DatePicker Date="{Binding Date}" />
+
+            <Label Text="Tipo" FontAttributes="Bold" />
+            <HorizontalStackLayout Spacing="10">
+                <RadioButton Content="Uscita" GroupName="tipo" IsChecked="{Binding IsIncome, Converter={StaticResource InverseBoolConverter}}" />
+                <RadioButton Content="Entrata" GroupName="tipo" IsChecked="{Binding IsIncome}" />
+            </HorizontalStackLayout>
+
+            <Label Text="Importo" FontAttributes="Bold" />
+            <Entry Text="{Binding AmountText}" Keyboard="Numeric" Placeholder="0.00" />
+
+            <Button Text="Salva" Command="{Binding SaveCommand}" Margin="0,20,0,0" />
+            <Button Text="Annulla" Command="{Binding CancelCommand}" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#512BD4, Dark=White}" />
+            <Button
+                Text="Elimina"
+                Command="{Binding DeleteCommand}"
+                IsVisible="{Binding IsExisting}"
+                BackgroundColor="#D9534F" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
