@@ -17,15 +17,12 @@ public class ImportedTransaction
 }
 
 /// <summary>
-/// Import una-tantum dello storico 2024-2025 proveniente da NIKO_SPESE.xlsx,
-/// bundlato come Resources/Raw/storico_import.json. Idempotente: controlla
-/// un flag in Preferences per non duplicare le transazioni se rieseguito.
+/// Import di transazioni da un file JSON scelto dall'utente tramite file picker
+/// (tipicamente generato a partire dal suo storico Excel). Può essere eseguito
+/// più volte: ogni chiamata inserisce le transazioni contenute nel file scelto.
 /// </summary>
 public class HistoricalImportService
 {
-    private const string ImportedFlagKey = "historical_import_done";
-    private const string AssetFileName = "storico_import.json";
-
     private readonly LocalDatabaseService _database;
 
     public HistoricalImportService(LocalDatabaseService database)
@@ -33,14 +30,9 @@ public class HistoricalImportService
         _database = database;
     }
 
-    public bool HasImported => Preferences.Default.Get(ImportedFlagKey, false);
-
-    public async Task<int> ImportAsync()
+    public async Task<int> ImportAsync(Stream jsonStream)
     {
-        if (HasImported) return 0;
-
-        using var stream = await FileSystem.OpenAppPackageFileAsync(AssetFileName);
-        var items = await JsonSerializer.DeserializeAsync<List<ImportedTransaction>>(stream)
+        var items = await JsonSerializer.DeserializeAsync<List<ImportedTransaction>>(jsonStream)
             ?? new List<ImportedTransaction>();
 
         foreach (var item in items)
@@ -54,7 +46,6 @@ public class HistoricalImportService
             await _database.SaveTransactionAsync(transaction);
         }
 
-        Preferences.Default.Set(ImportedFlagKey, true);
         return items.Count;
     }
 }

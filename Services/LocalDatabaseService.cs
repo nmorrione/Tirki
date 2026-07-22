@@ -32,6 +32,15 @@ public class LocalDatabaseService
             .ToListAsync();
     }
 
+    public async Task<List<Transaction>> GetTransactionsAsync(DateTime from, DateTime to)
+    {
+        await EnsureInitializedAsync();
+        return await _connection.Table<Transaction>()
+            .Where(t => !t.IsDeleted && t.Date >= from && t.Date <= to)
+            .OrderByDescending(t => t.Date)
+            .ToListAsync();
+    }
+
     public async Task<List<Category>> GetCategoriesAsync()
     {
         await EnsureInitializedAsync();
