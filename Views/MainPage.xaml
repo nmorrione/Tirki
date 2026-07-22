@@ -57,11 +57,7 @@
 
                 <CollectionView.GroupHeaderTemplate>
                     <DataTemplate x:DataType="{x:Type vm:TransactionGroup}">
-                        <Grid
-                            ColumnDefinitions="*,Auto"
-                            Padding="16,10"
-                            BackgroundColor="{AppThemeBinding Light=#F2F2F7, Dark=#1C1C1E}"
-                            IsVisible="{Binding IsCurrentSection, Converter={StaticResource InverseBoolConverter}}">
+                        <Grid ColumnDefinitions="*,Auto" Padding="16,10" BackgroundColor="{AppThemeBinding Light=#F2F2F7, Dark=#1C1C1E}">
                             <Label Text="{Binding Name}" FontAttributes="Bold" />
                             <Label Grid.Column="1" Text="{Binding Total, Converter={StaticResource CurrencyConverter}}" FontAttributes="Bold" />
                         </Grid>

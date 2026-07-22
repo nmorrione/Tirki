@@ -95,10 +95,10 @@ public partial class TransactionsViewModel : ObservableObject
 
             if (Groups.Count > 0)
             {
-                Groups[0].IsCurrentSection = true;
                 CurrentSectionName = Groups[0].Name;
                 CurrentSectionTotal = Groups[0].Total;
-                IsCurrentSectionVisible = true;
+                // L'header vero del primo gruppo è ancora visibile in cima: niente barra sticky finché non si scrolla oltre.
+                IsCurrentSectionVisible = false;
             }
             else
             {
@@ -120,6 +120,7 @@ public partial class TransactionsViewModel : ObservableObject
         if (Groups.Count == 0) return;
 
         var target = Groups[^1];
+        var targetHeaderIndex = 0;
         var cursor = 0;
         foreach (var group in Groups)
         {
@@ -127,19 +128,18 @@ public partial class TransactionsViewModel : ObservableObject
             if (flatFirstVisibleIndex < cursor + groupSpan)
             {
                 target = group;
+                targetHeaderIndex = cursor;
                 break;
             }
             cursor += groupSpan;
         }
 
-        if (CurrentSectionName != target.Name)
-        {
-            CurrentSectionName = target.Name;
-            CurrentSectionTotal = target.Total;
-        }
+        CurrentSectionName = target.Name;
+        CurrentSectionTotal = target.Total;
 
-        foreach (var group in Groups)
-            group.IsCurrentSection = ReferenceEquals(group, target);
+        // La barra sticky serve solo a sostituire l'header vero quando è già scomparso scrollando:
+        // se siamo ancora fermi sull'header stesso (flatFirstVisibleIndex == targetHeaderIndex), nasconderla evita di duplicare il nome del mese.
+        IsCurrentSectionVisible = flatFirstVisibleIndex > targetHeaderIndex;
     }
 
     [RelayCommand]
