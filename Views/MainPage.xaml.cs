@@ -18,4 +18,9 @@ public partial class MainPage : ContentPage
         base.OnAppearing();
         await _viewModel.LoadCommand.ExecuteAsync(null);
     }
+
+    private void OnTransactionsScrolled(object? sender, ItemsViewScrolledEventArgs e)
+    {
+        _viewModel.UpdateCurrentSection(e.FirstVisibleItemIndex);
+    }
 }
