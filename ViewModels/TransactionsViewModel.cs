@@ -9,6 +9,8 @@ namespace Tirki.ViewModels;
 
 public partial class TransactionsViewModel : ObservableObject
 {
+    private const string BalanceHiddenKey = "balance_hidden";
+
     private readonly LocalDatabaseService _database;
     private static readonly CultureInfo ItalianCulture = new("it-IT");
     private bool _suppressFilterReload;
@@ -22,12 +24,24 @@ public partial class TransactionsViewModel : ObservableObject
         FilterFrom = new DateTime(today.Year, today.Month, 1);
         FilterTo = FilterFrom.AddMonths(1).AddDays(-1);
         _suppressFilterReload = false;
+
+        isBalanceHidden = Preferences.Default.Get(BalanceHiddenKey, false);
     }
 
     public ObservableCollection<TransactionGroup> Groups { get; } = new();
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayBalance))]
     private decimal balance;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayBalance))]
+    [NotifyPropertyChangedFor(nameof(EyeGlyph))]
+    private bool isBalanceHidden;
+
+    public string DisplayBalance => IsBalanceHidden ? "•••••• €" : Balance.ToString("C", ItalianCulture);
+
+    public string EyeGlyph => IsBalanceHidden ? "🙈" : "👁";
 
     [ObservableProperty]
     private bool isBusy;
@@ -139,6 +153,13 @@ public partial class TransactionsViewModel : ObservableObject
         // La barra sticky serve solo a sostituire l'header vero quando è già scomparso scrollando:
         // se siamo ancora fermi sull'header stesso (flatFirstVisibleIndex == targetHeaderIndex), nasconderla evita di duplicare il nome del mese.
         IsCurrentSectionVisible = flatFirstVisibleIndex > targetHeaderIndex;
+    }
+
+    [RelayCommand]
+    private void ToggleBalanceVisibility()
+    {
+        IsBalanceHidden = !IsBalanceHidden;
+        Preferences.Default.Set(BalanceHiddenKey, IsBalanceHidden);
     }
 
     [RelayCommand]

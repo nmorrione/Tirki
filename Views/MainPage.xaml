@@ -9,15 +9,16 @@
     Title="Tirki">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="⚙" Command="{Binding OpenSettingsCommand}" Order="Primary" Priority="0" />
-        <ToolbarItem Text="+" Command="{Binding AddTransactionCommand}" Order="Primary" Priority="1" />
+        <ToolbarItem Text="{Binding EyeGlyph}" Command="{Binding ToggleBalanceVisibilityCommand}" Order="Primary" Priority="0" />
+        <ToolbarItem Text="⚙" Command="{Binding OpenSettingsCommand}" Order="Primary" Priority="1" />
+        <ToolbarItem Text="+" Command="{Binding AddTransactionCommand}" Order="Primary" Priority="2" />
     </ContentPage.ToolbarItems>
 
     <Grid RowDefinitions="Auto,Auto,Auto,*">
 
         <VerticalStackLayout Grid.Row="0" Padding="20" Spacing="4" BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#3D1F9E}">
             <Label Text="Saldo attuale" TextColor="White" Opacity="0.8" FontSize="14" />
-            <Label Text="{Binding Balance, Converter={StaticResource CurrencyConverter}}" TextColor="White" FontSize="34" FontAttributes="Bold" />
+            <Label Text="{Binding DisplayBalance}" TextColor="White" FontSize="34" FontAttributes="Bold" />
         </VerticalStackLayout>
 
         <Grid Grid.Row="1" Padding="16,10" ColumnDefinitions="*,*,Auto" ColumnSpacing="10" BackgroundColor="{AppThemeBinding Light=#F2F2F7, Dark=#1C1C1E}">
