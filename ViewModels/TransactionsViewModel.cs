@@ -95,6 +95,7 @@ public partial class TransactionsViewModel : ObservableObject
 
             if (Groups.Count > 0)
             {
+                Groups[0].IsCurrentSection = true;
                 CurrentSectionName = Groups[0].Name;
                 CurrentSectionTotal = Groups[0].Total;
                 IsCurrentSectionVisible = true;
@@ -118,25 +119,27 @@ public partial class TransactionsViewModel : ObservableObject
     {
         if (Groups.Count == 0) return;
 
+        var target = Groups[^1];
         var cursor = 0;
         foreach (var group in Groups)
         {
             var groupSpan = 1 + group.Count; // 1 per l'header del gruppo
             if (flatFirstVisibleIndex < cursor + groupSpan)
             {
-                if (CurrentSectionName != group.Name)
-                {
-                    CurrentSectionName = group.Name;
-                    CurrentSectionTotal = group.Total;
-                }
-                return;
+                target = group;
+                break;
             }
             cursor += groupSpan;
         }
 
-        var last = Groups[^1];
-        CurrentSectionName = last.Name;
-        CurrentSectionTotal = last.Total;
+        if (CurrentSectionName != target.Name)
+        {
+            CurrentSectionName = target.Name;
+            CurrentSectionTotal = target.Total;
+        }
+
+        foreach (var group in Groups)
+            group.IsCurrentSection = ReferenceEquals(group, target);
     }
 
     [RelayCommand]
