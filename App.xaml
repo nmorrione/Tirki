@@ -12,6 +12,7 @@
             </ResourceDictionary.MergedDictionaries>
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:CurrencyConverter x:Key="CurrencyConverter" />
+            <converters:AmountBackgroundColorConverter x:Key="AmountBackgroundColorConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

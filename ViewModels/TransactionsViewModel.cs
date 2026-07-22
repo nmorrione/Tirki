@@ -10,14 +10,12 @@ namespace Tirki.ViewModels;
 public partial class TransactionsViewModel : ObservableObject
 {
     private readonly LocalDatabaseService _database;
-    private readonly HistoricalImportService _historicalImport;
     private static readonly CultureInfo ItalianCulture = new("it-IT");
     private bool _suppressFilterReload;
 
-    public TransactionsViewModel(LocalDatabaseService database, HistoricalImportService historicalImport)
+    public TransactionsViewModel(LocalDatabaseService database)
     {
         _database = database;
-        _historicalImport = historicalImport;
 
         var today = DateTime.Today;
         _suppressFilterReload = true;
@@ -60,13 +58,14 @@ public partial class TransactionsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void SetCurrentMonth()
+    private async Task SetCurrentMonthAsync()
     {
         var today = DateTime.Today;
         _suppressFilterReload = true;
         FilterFrom = new DateTime(today.Year, today.Month, 1);
-        _suppressFilterReload = false;
         FilterTo = FilterFrom.AddMonths(1).AddDays(-1);
+        _suppressFilterReload = false;
+        await LoadAsync();
     }
 
     [RelayCommand]
@@ -143,48 +142,9 @@ public partial class TransactionsViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private async Task ImportHistoricalDataAsync()
+    private async Task OpenSettingsAsync()
     {
-        if (IsBusy) return;
-
-        FileResult? file;
-        try
-        {
-            file = await FilePicker.Default.PickAsync(new PickOptions
-            {
-                PickerTitle = "Seleziona il file JSON dello storico",
-                FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-                {
-                    { DevicePlatform.Android, new[] { "application/json" } },
-                    { DevicePlatform.iOS, new[] { "public.json" } },
-                    { DevicePlatform.WinUI, new[] { ".json" } },
-                })
-            });
-        }
-        catch (Exception)
-        {
-            file = null;
-        }
-
-        if (file is null) return;
-
-        IsBusy = true;
-        try
-        {
-            await using var stream = await file.OpenReadAsync();
-            var count = await _historicalImport.ImportAsync(stream);
-            await Shell.Current.DisplayAlertAsync("Import completato", $"Importate {count} transazioni dal file selezionato.", "OK");
-        }
-        catch (Exception ex)
-        {
-            await Shell.Current.DisplayAlertAsync("Errore import", ex.Message, "OK");
-        }
-        finally
-        {
-            IsBusy = false;
-        }
-
-        await LoadAsync();
+        await Shell.Current.GoToAsync(nameof(Views.SettingsPage));
     }
 
     [RelayCommand]

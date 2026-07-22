@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="Tirki.Views.SettingsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Tirki.ViewModels"
+    x:DataType="vm:SettingsViewModel"
+    Title="Impostazioni">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="24">
+
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Aspetto" FontAttributes="Bold" FontSize="14" Opacity="0.6" />
+                <RadioButton Content="Chiaro" GroupName="theme" IsChecked="{Binding IsLightTheme}" />
+                <RadioButton Content="Scuro" GroupName="theme" IsChecked="{Binding IsDarkTheme}" />
+                <RadioButton Content="Segui sistema" GroupName="theme" IsChecked="{Binding IsSystemTheme}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Account" FontAttributes="Bold" FontSize="14" Opacity="0.6" />
+                <Button Text="Accedi con Google" Command="{Binding SignInWithGoogleCommand}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Dati" FontAttributes="Bold" FontSize="14" Opacity="0.6" />
+                <Button Text="Importa storico Excel" Command="{Binding ImportHistoricalDataCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+            </VerticalStackLayout>
+
+            <Label
+                Text="{Binding AppVersion, StringFormat='Tirki v{0}'}"
+                FontSize="12"
+                Opacity="0.5"
+                HorizontalOptions="Center"
+                Margin="0,20,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
