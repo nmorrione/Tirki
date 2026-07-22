@@ -17,6 +17,13 @@
         <VerticalStackLayout Grid.Row="0" Padding="20" Spacing="4" BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#3D1F9E}">
             <Label Text="Saldo attuale" TextColor="White" Opacity="0.8" FontSize="14" />
             <Label Text="{Binding Balance, Converter={StaticResource CurrencyConverter}}" TextColor="White" FontSize="34" FontAttributes="Bold" />
+            <Button
+                Text="Importa storico Excel"
+                Command="{Binding ImportHistoricalDataCommand}"
+                IsVisible="{Binding ShowImportHistoricalData}"
+                Margin="0,10,0,0"
+                BackgroundColor="White"
+                TextColor="#512BD4" />
         </VerticalStackLayout>
 
         <RefreshView Grid.Row="1" IsRefreshing="{Binding IsBusy}" Command="{Binding LoadCommand}">

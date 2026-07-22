@@ -10,12 +10,17 @@ namespace Tirki.ViewModels;
 public partial class TransactionsViewModel : ObservableObject
 {
     private readonly LocalDatabaseService _database;
+    private readonly HistoricalImportService _historicalImport;
     private static readonly CultureInfo ItalianCulture = new("it-IT");
 
-    public TransactionsViewModel(LocalDatabaseService database)
+    public TransactionsViewModel(LocalDatabaseService database, HistoricalImportService historicalImport)
     {
         _database = database;
+        _historicalImport = historicalImport;
     }
+
+    [ObservableProperty]
+    private bool showImportHistoricalData;
 
     public ObservableCollection<TransactionGroup> Groups { get; } = new();
 
@@ -32,6 +37,8 @@ public partial class TransactionsViewModel : ObservableObject
         IsBusy = true;
         try
         {
+            ShowImportHistoricalData = !_historicalImport.HasImported;
+
             var transactions = await _database.GetTransactionsAsync();
             Balance = transactions.Sum(t => t.Amount);
 
@@ -50,6 +57,25 @@ public partial class TransactionsViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    [RelayCommand]
+    private async Task ImportHistoricalDataAsync()
+    {
+        if (IsBusy) return;
+        IsBusy = true;
+        try
+        {
+            var count = await _historicalImport.ImportAsync();
+            ShowImportHistoricalData = !_historicalImport.HasImported;
+            await Shell.Current.DisplayAlertAsync("Import completato", $"Importate {count} transazioni storiche.", "OK");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+
+        await LoadAsync();
     }
 
     [RelayCommand]
