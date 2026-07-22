@@ -41,7 +41,7 @@ public partial class TransactionsViewModel : ObservableObject
 
     public string DisplayBalance => IsBalanceHidden ? "•••••• €" : Balance.ToString("C", ItalianCulture);
 
-    public string EyeGlyph => IsBalanceHidden ? "🙈" : "👁";
+    public string EyeGlyph => IsBalanceHidden ? "○" : "◉";
 
     [ObservableProperty]
     private bool isBusy;
