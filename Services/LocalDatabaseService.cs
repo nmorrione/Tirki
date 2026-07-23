@@ -19,6 +19,7 @@ public class LocalDatabaseService
     {
         await _connection.CreateTableAsync<Transaction>();
         await _connection.CreateTableAsync<Category>();
+        await _connection.CreateTableAsync<TransactionPreset>();
     }
 
     private async Task EnsureInitializedAsync() => await _initialization;
@@ -88,6 +89,28 @@ public class LocalDatabaseService
         await SaveCategoryAsync(category);
     }
 
+    public async Task<List<TransactionPreset>> GetPresetsAsync()
+    {
+        await EnsureInitializedAsync();
+        return await _connection.Table<TransactionPreset>()
+            .Where(p => !p.IsDeleted)
+            .OrderBy(p => p.Description)
+            .ToListAsync();
+    }
+
+    public async Task SavePresetAsync(TransactionPreset preset)
+    {
+        await EnsureInitializedAsync();
+        preset.UpdatedAt = DateTime.UtcNow;
+        await _connection.InsertOrReplaceAsync(preset);
+    }
+
+    public async Task DeletePresetAsync(TransactionPreset preset)
+    {
+        preset.IsDeleted = true;
+        await SavePresetAsync(preset);
+    }
+
     /// <summary>Tutte le transazioni, incluse quelle cancellate (soft-delete) — per il sync con Drive.</summary>
     public async Task<List<Transaction>> GetAllTransactionsRawAsync()
     {
@@ -114,5 +137,19 @@ public class LocalDatabaseService
     {
         await EnsureInitializedAsync();
         await _connection.InsertOrReplaceAsync(category);
+    }
+
+    /// <summary>Tutti i preset, inclusi quelli cancellati (soft-delete) — per il sync con Drive.</summary>
+    public async Task<List<TransactionPreset>> GetAllPresetsRawAsync()
+    {
+        await EnsureInitializedAsync();
+        return await _connection.Table<TransactionPreset>().ToListAsync();
+    }
+
+    /// <summary>Scrive un preset così com'è, senza toccare UpdatedAt — per scrivere il risultato di un merge sync.</summary>
+    public async Task SavePresetRawAsync(TransactionPreset preset)
+    {
+        await EnsureInitializedAsync();
+        await _connection.InsertOrReplaceAsync(preset);
     }
 }

@@ -13,7 +13,8 @@ namespace Tirki.Services;
 /// invece di un unico blob con tutto lo storico, più un piccolo "manifest.json" che elenca, per ogni
 /// mese, l'UpdatedAt più recente che conteneva all'ultimo upload. Così un device scopre con un solo
 /// download quali mesi sono cambiati (qui o altrove) e tocca solo quelli — niente re-download/upload
-/// dell'intera storia ad ogni sync. Le categorie restano in un unico file piccolo, sincronizzato sempre.
+/// dell'intera storia ad ogni sync. Categorie e preset restano in un unico file piccolo ciascuno,
+/// sincronizzati per intero ad ogni sync (liste corte, nessun bisogno di partizionamento).
 ///
 /// Ogni sync procede in due fasi separate (mai intrecciate): prima si scarica tutto ciò che serve e si
 /// aggiorna il database locale (fonte di verità), poi si ricalcola il raggruppamento per mese dal
@@ -27,6 +28,7 @@ public class DriveSyncService
     private const string AppFolderName = "Tirki";
     private const string ManifestFileName = "manifest.json";
     private const string CategoriesFileName = "categories.json";
+    private const string PresetsFileName = "presets.json";
     private const string LegacyDataFileName = "tirki_data.json";
     private const string FolderMimeType = "application/vnd.google-apps.folder";
 
@@ -73,6 +75,15 @@ public class DriveSyncService
         foreach (var category in mergedCategories)
             await _database.SaveCategoryRawAsync(category);
         await UploadListAsync(drive, categoriesFileId, mergedCategories);
+
+        // Preset spese ricorrenti: stesso trattamento delle categorie, lista corta, sempre intera.
+        var presetsFileId = await GetOrCreateNamedFileAsync(drive, folderId, PresetsFileName, "[]");
+        var remotePresets = await DownloadListAsync<TransactionPreset>(drive, presetsFileId);
+        var localPresets = await _database.GetAllPresetsRawAsync();
+        var mergedPresets = MergeById(localPresets, remotePresets, p => p.Id, p => p.UpdatedAt);
+        foreach (var preset in mergedPresets)
+            await _database.SavePresetRawAsync(preset);
+        await UploadListAsync(drive, presetsFileId, mergedPresets);
 
         // Transazioni: manifest + file per mese.
         var manifestFileId = await GetOrCreateNamedFileAsync(drive, folderId, ManifestFileName, "{}");

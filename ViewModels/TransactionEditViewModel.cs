@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -18,7 +19,10 @@ public partial class TransactionEditViewModel : ObservableObject
     {
         _database = database;
         _autoSync = autoSync;
+        _ = LoadPresetsAsync();
     }
+
+    public ObservableCollection<TransactionPreset> Presets { get; } = new();
 
     [ObservableProperty]
     private string? id;
@@ -70,29 +74,81 @@ public partial class TransactionEditViewModel : ObservableObject
         AmountText = Math.Abs(existing.Amount).ToString(CultureInfo.InvariantCulture);
     }
 
-    [RelayCommand]
-    private async Task SaveAsync()
+    private async Task<decimal?> ValidateAndParseAmountAsync()
     {
         if (string.IsNullOrWhiteSpace(Description))
         {
             await Shell.Current.DisplayAlertAsync("Attenzione", "Inserisci una descrizione.", "OK");
-            return;
+            return null;
         }
 
         if (!decimal.TryParse(AmountText, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount) || amount <= 0)
         {
             await Shell.Current.DisplayAlertAsync("Attenzione", "Inserisci un importo valido maggiore di zero.", "OK");
-            return;
+            return null;
         }
+
+        return amount;
+    }
+
+    [RelayCommand]
+    private async Task SaveAsync()
+    {
+        var amount = await ValidateAndParseAmountAsync();
+        if (amount is null) return;
 
         _transaction.Date = Date;
         _transaction.Description = Description.Trim();
-        _transaction.Amount = IsIncome ? amount : -amount;
+        _transaction.Amount = IsIncome ? amount.Value : -amount.Value;
 
         await _database.SaveTransactionAsync(_transaction);
         _autoSync.MarkTransactionDirty(_transaction, _originalDate);
         _autoSync.TriggerDebouncedSync();
         await Shell.Current.GoToAsync("..");
+    }
+
+    private async Task LoadPresetsAsync()
+    {
+        var presets = await _database.GetPresetsAsync();
+        Presets.Clear();
+        foreach (var preset in presets)
+            Presets.Add(preset);
+    }
+
+    [RelayCommand]
+    private void ApplyPreset(TransactionPreset preset)
+    {
+        Description = preset.Description;
+        AmountText = Math.Abs(preset.Amount).ToString(CultureInfo.InvariantCulture);
+        IsIncome = preset.Amount > 0;
+    }
+
+    [RelayCommand]
+    private async Task SaveAsPresetAsync()
+    {
+        var amount = await ValidateAndParseAmountAsync();
+        if (amount is null) return;
+
+        var preset = new TransactionPreset
+        {
+            Description = Description.Trim(),
+            Amount = IsIncome ? amount.Value : -amount.Value,
+        };
+
+        await _database.SavePresetAsync(preset);
+        _autoSync.TriggerDebouncedSync();
+        Presets.Add(preset);
+    }
+
+    [RelayCommand]
+    private async Task DeletePresetAsync(TransactionPreset preset)
+    {
+        var confirm = await Shell.Current.DisplayAlertAsync("Elimina preset", $"Eliminare il preset \"{preset.Description}\"?", "Elimina", "Annulla");
+        if (!confirm) return;
+
+        await _database.DeletePresetAsync(preset);
+        _autoSync.TriggerDebouncedSync();
+        Presets.Remove(preset);
     }
 
     [RelayCommand]
