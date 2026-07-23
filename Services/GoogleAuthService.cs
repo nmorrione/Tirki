@@ -15,10 +15,11 @@ namespace Tirki.Services;
 /// che sono client pubblici puri. Non è una credenziale personale dell'utente: è un secondo
 /// identificativo dell'app generato da Google insieme al Client ID.
 /// </summary>
-public class GoogleAuthService
+// Il client secret vive in GoogleAuthService.Secrets.cs, un file locale ignorato da git
+// (vedi GoogleAuthService.Secrets.cs.template per come ricrearlo su una macchina nuova).
+public partial class GoogleAuthService
 {
     private const string ClientId = "827791927659-13jodpkjgofvjuaiqvfb09nc4dmft2qd.apps.googleusercontent.com";
-    private const string ClientSecret = "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";
     private const string RedirectUri = "com.googleusercontent.apps.827791927659-13jodpkjgofvjuaiqvfb09nc4dmft2qd:/oauth2redirect";
 
     private const string Scope = "https://www.googleapis.com/auth/drive.file";

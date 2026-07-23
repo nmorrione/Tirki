@@ -361,3 +361,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Google OAuth client secret: mai su git, vedi GoogleAuthService.Secrets.cs.template
+Services/GoogleAuthService.Secrets.cs
