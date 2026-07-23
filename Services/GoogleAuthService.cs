@@ -6,17 +6,20 @@ using System.Text.Json.Serialization;
 namespace Tirki.Services;
 
 /// <summary>
-/// Login Google via browser di sistema (WebAuthenticator) con Authorization Code + PKCE,
-/// nessun client secret (client pubblico/nativo). Il refresh token viene salvato in
-/// SecureStorage e usato per ottenere nuovi access token senza richiedere login ogni volta.
+/// Login Google via browser di sistema (WebAuthenticator) con Authorization Code + PKCE.
+/// Il refresh token viene salvato in SecureStorage e usato per ottenere nuovi access token
+/// senza richiedere login ogni volta.
 ///
-/// NOTE: ClientId e RedirectUri vanno impostati con i valori del client OAuth "App per Desktop"
-/// creato su Google Cloud Console (vedi piano fase 5) prima di poter testare il login reale.
+/// NOTE: per un client OAuth di tipo "App per Desktop", Google richiede comunque il
+/// client_secret nello scambio token (anche con PKCE) — a differenza dei tipi Android/iOS,
+/// che sono client pubblici puri. Non è una credenziale personale dell'utente: è un secondo
+/// identificativo dell'app generato da Google insieme al Client ID.
 /// </summary>
 public class GoogleAuthService
 {
-    private const string ClientId = "TODO_INSERIRE_CLIENT_ID.apps.googleusercontent.com";
-    private const string RedirectUri = "TODO_INSERIRE_REDIRECT_URI";
+    private const string ClientId = "827791927659-13jodpkjgofvjuaiqvfb09nc4dmft2qd.apps.googleusercontent.com";
+    private const string ClientSecret = "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";
+    private const string RedirectUri = "com.googleusercontent.apps.827791927659-13jodpkjgofvjuaiqvfb09nc4dmft2qd:/oauth2redirect";
 
     private const string Scope = "https://www.googleapis.com/auth/drive.file";
     private const string AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -80,10 +83,11 @@ public class GoogleAuthService
         var response = await http.PostAsync(TokenEndpoint, new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["client_id"] = ClientId,
+            ["client_secret"] = ClientSecret,
             ["refresh_token"] = refreshToken,
             ["grant_type"] = "refresh_token",
         }));
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowAsync(response);
 
         var token = await response.Content.ReadFromJsonAsync<TokenResponse>()
             ?? throw new InvalidOperationException("Risposta token non valida da Google.");
@@ -99,12 +103,13 @@ public class GoogleAuthService
         var response = await http.PostAsync(TokenEndpoint, new FormUrlEncodedContent(new Dictionary<string, string>
         {
             ["client_id"] = ClientId,
+            ["client_secret"] = ClientSecret,
             ["code"] = code,
             ["code_verifier"] = codeVerifier,
             ["grant_type"] = "authorization_code",
             ["redirect_uri"] = RedirectUri,
         }));
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessOrThrowAsync(response);
 
         var token = await response.Content.ReadFromJsonAsync<TokenResponse>()
             ?? throw new InvalidOperationException("Risposta token non valida da Google.");
@@ -114,6 +119,13 @@ public class GoogleAuthService
 
         if (!string.IsNullOrEmpty(token.RefreshToken))
             await SecureStorage.Default.SetAsync(RefreshTokenKey, token.RefreshToken);
+    }
+
+    private static async Task EnsureSuccessOrThrowAsync(HttpResponseMessage response)
+    {
+        if (response.IsSuccessStatusCode) return;
+        var body = await response.Content.ReadAsStringAsync();
+        throw new InvalidOperationException($"Google ha rifiutato la richiesta ({(int)response.StatusCode}): {body}");
     }
 
     private static string GenerateCodeVerifier()
