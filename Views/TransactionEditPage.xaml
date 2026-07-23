@@ -15,7 +15,7 @@
             <Entry Text="{Binding Description}" Placeholder="Es. Spesa, Stipendio, Affitto..." />
 
             <Label Text="Data" FontAttributes="Bold" />
-            <DatePicker Date="{Binding Date}" />
+            <DatePicker Date="{Binding Date}" Format="dd/MM/yyyy" />
 
             <Label Text="Tipo" FontAttributes="Bold" />
             <HorizontalStackLayout Spacing="10">
