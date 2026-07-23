@@ -137,6 +137,18 @@ public class DriveSyncService
             knownWatermarks[month] = watermark;
         }
 
+        // Il manifest è un unico file: se un altro device ha scritto la sua versione nel frattempo
+        // (es. durante un primo sync storico lungo che si sovrappone a una modifica rapida altrove),
+        // scriverlo semplicemente sovrascriverebbe i suoi mesi con lo snapshot ORMAI VECCHIO scaricato
+        // a inizio funzione. Per questo si riscarica una copia fresca appena prima di scrivere e si
+        // unisce mese per mese (vince il watermark più recente) invece di sovrascrivere alla cieca.
+        var freshRemoteManifest = await DownloadManifestAsync(drive, manifestFileId);
+        foreach (var (month, watermark) in freshRemoteManifest.MonthWatermarks)
+        {
+            if (!updatedWatermarks.TryGetValue(month, out var existing) || watermark > existing)
+                updatedWatermarks[month] = watermark;
+        }
+
         await UploadManifestAsync(drive, manifestFileId, new SyncManifest { MonthWatermarks = updatedWatermarks });
         SaveKnownMonthWatermarks(knownWatermarks);
         SavePendingDirtyMonths(new HashSet<string>());
