@@ -22,6 +22,7 @@ public static class MauiProgram
 		builder.Services.AddSingleton<HistoricalImportService>();
 		builder.Services.AddSingleton<GoogleAuthService>();
 		builder.Services.AddSingleton<DriveSyncService>();
+		builder.Services.AddSingleton<AutoSyncService>();
 		builder.Services.AddTransient<TransactionsViewModel>();
 		builder.Services.AddTransient<MainPage>();
 		builder.Services.AddTransient<TransactionEditViewModel>();

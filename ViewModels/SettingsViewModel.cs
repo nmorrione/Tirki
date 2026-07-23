@@ -8,13 +8,13 @@ public partial class SettingsViewModel : ObservableObject
 {
     private readonly HistoricalImportService _historicalImport;
     private readonly GoogleAuthService _auth;
-    private readonly DriveSyncService _driveSync;
+    private readonly AutoSyncService _autoSync;
 
-    public SettingsViewModel(HistoricalImportService historicalImport, GoogleAuthService auth, DriveSyncService driveSync)
+    public SettingsViewModel(HistoricalImportService historicalImport, GoogleAuthService auth, AutoSyncService autoSync)
     {
         _historicalImport = historicalImport;
         _auth = auth;
-        _driveSync = driveSync;
+        _autoSync = autoSync;
 
         var savedTheme = Preferences.Default.Get(AppPreferenceKeys.Theme, nameof(AppTheme.Unspecified));
         _isInitializingTheme = true;
@@ -80,6 +80,25 @@ public partial class SettingsViewModel : ObservableObject
         GoogleButtonText = IsSignedIn ? "Disconnetti account Google" : "Accedi con Google";
     }
 
+    public void OnAppearing()
+    {
+        _autoSync.StatusChanged += HandleSyncStatusChanged;
+
+        var lastKnownStatus = _autoSync.GetLastKnownStatus();
+        if (!string.IsNullOrEmpty(lastKnownStatus))
+            SyncStatus = lastKnownStatus;
+
+        _ = RefreshSignInStateAsync();
+    }
+
+    public void OnDisappearing()
+    {
+        _autoSync.StatusChanged -= HandleSyncStatusChanged;
+    }
+
+    private void HandleSyncStatusChanged(string status)
+        => MainThread.BeginInvokeOnMainThread(() => SyncStatus = status);
+
     [RelayCommand]
     private async Task SignInWithGoogleAsync()
     {
@@ -122,16 +141,11 @@ public partial class SettingsViewModel : ObservableObject
         if (IsBusy || !IsSignedIn) return;
 
         IsBusy = true;
-        SyncStatus = "Sincronizzazione in corso...";
         try
         {
-            await _driveSync.SyncNowAsync();
-            SyncStatus = $"Ultima sincronizzazione: {DateTime.Now:dd/MM/yyyy HH:mm}";
-        }
-        catch (Exception ex)
-        {
-            SyncStatus = "Sincronizzazione non riuscita.";
-            await Shell.Current.DisplayAlertAsync("Errore sincronizzazione", ex.Message, "OK");
+            var outcome = await _autoSync.SyncNowAsync();
+            if (outcome == SyncOutcome.Failed)
+                await Shell.Current.DisplayAlertAsync("Errore sincronizzazione", _autoSync.LastError ?? "Errore sconosciuto", "OK");
         }
         finally
         {

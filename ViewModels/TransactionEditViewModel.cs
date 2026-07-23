@@ -10,11 +10,13 @@ namespace Tirki.ViewModels;
 public partial class TransactionEditViewModel : ObservableObject
 {
     private readonly LocalDatabaseService _database;
+    private readonly AutoSyncService _autoSync;
     private Transaction _transaction = new();
 
-    public TransactionEditViewModel(LocalDatabaseService database)
+    public TransactionEditViewModel(LocalDatabaseService database, AutoSyncService autoSync)
     {
         _database = database;
+        _autoSync = autoSync;
     }
 
     [ObservableProperty]
@@ -85,6 +87,7 @@ public partial class TransactionEditViewModel : ObservableObject
         _transaction.Amount = IsIncome ? amount : -amount;
 
         await _database.SaveTransactionAsync(_transaction);
+        _autoSync.TriggerDebouncedSync();
         await Shell.Current.GoToAsync("..");
     }
 
@@ -95,6 +98,7 @@ public partial class TransactionEditViewModel : ObservableObject
         if (!confirm) return;
 
         await _database.DeleteTransactionAsync(_transaction);
+        _autoSync.TriggerDebouncedSync();
         await Shell.Current.GoToAsync("..");
     }
 

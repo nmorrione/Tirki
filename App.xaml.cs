@@ -5,9 +5,12 @@ namespace Tirki;
 
 public partial class App : Application
 {
-	public App()
+	private readonly AutoSyncService _autoSync;
+
+	public App(AutoSyncService autoSync)
 	{
 		InitializeComponent();
+		_autoSync = autoSync;
 
 		var savedTheme = Preferences.Default.Get(AppPreferenceKeys.Theme, nameof(AppTheme.Unspecified));
 		UserAppTheme = Enum.Parse<AppTheme>(savedTheme);
@@ -15,6 +18,11 @@ public partial class App : Application
 
 	protected override Window CreateWindow(IActivationState? activationState)
 	{
-		return new Window(new AppShell());
+		var window = new Window(new AppShell());
+		// Il contesto piattaforma (necessario a SecureStorage) non è ancora pronto nel costruttore di App:
+		// si aspetta Created, che scatta a finestra nativa creata.
+		window.Created += (_, _) => _autoSync.TriggerBackgroundSync();
+		window.Resumed += (_, _) => _autoSync.TriggerBackgroundSync();
+		return window;
 	}
 }

@@ -12,12 +12,14 @@ public partial class TransactionsViewModel : ObservableObject
     private const string BalanceHiddenKey = "balance_hidden";
 
     private readonly LocalDatabaseService _database;
+    private readonly AutoSyncService _autoSync;
     private static readonly CultureInfo ItalianCulture = new("it-IT");
     private bool _suppressFilterReload;
 
-    public TransactionsViewModel(LocalDatabaseService database)
+    public TransactionsViewModel(LocalDatabaseService database, AutoSyncService autoSync)
     {
         _database = database;
+        _autoSync = autoSync;
 
         var today = DateTime.Today;
         _suppressFilterReload = true;
@@ -211,6 +213,7 @@ public partial class TransactionsViewModel : ObservableObject
         if (!confirm) return;
 
         await _database.DeleteTransactionAsync(transaction);
+        _autoSync.TriggerDebouncedSync();
         await LoadAsync();
     }
 }
