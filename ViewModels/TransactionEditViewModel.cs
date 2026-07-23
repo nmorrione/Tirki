@@ -12,6 +12,7 @@ public partial class TransactionEditViewModel : ObservableObject
     private readonly LocalDatabaseService _database;
     private readonly AutoSyncService _autoSync;
     private Transaction _transaction = new();
+    private DateTime? _originalDate;
 
     public TransactionEditViewModel(LocalDatabaseService database, AutoSyncService autoSync)
     {
@@ -50,6 +51,7 @@ public partial class TransactionEditViewModel : ObservableObject
         if (string.IsNullOrWhiteSpace(id) || !Guid.TryParse(id, out var guid))
         {
             _transaction = new Transaction();
+            _originalDate = null;
             IsExisting = false;
             Title = "Nuova transazione";
             return;
@@ -59,6 +61,7 @@ public partial class TransactionEditViewModel : ObservableObject
         if (existing is null) return;
 
         _transaction = existing;
+        _originalDate = existing.Date;
         IsExisting = true;
         Title = "Modifica transazione";
         Date = existing.Date;
@@ -87,6 +90,7 @@ public partial class TransactionEditViewModel : ObservableObject
         _transaction.Amount = IsIncome ? amount : -amount;
 
         await _database.SaveTransactionAsync(_transaction);
+        _autoSync.MarkTransactionDirty(_transaction, _originalDate);
         _autoSync.TriggerDebouncedSync();
         await Shell.Current.GoToAsync("..");
     }
@@ -98,6 +102,7 @@ public partial class TransactionEditViewModel : ObservableObject
         if (!confirm) return;
 
         await _database.DeleteTransactionAsync(_transaction);
+        _autoSync.MarkTransactionDirty(_transaction);
         _autoSync.TriggerDebouncedSync();
         await Shell.Current.GoToAsync("..");
     }

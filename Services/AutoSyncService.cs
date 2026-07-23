@@ -1,3 +1,5 @@
+using Tirki.Models;
+
 namespace Tirki.Services;
 
 public enum SyncOutcome
@@ -76,6 +78,10 @@ public class AutoSyncService
 
     /// <summary>Avvia un sync subito, senza attenderne l'esito (avvio app, resume).</summary>
     public void TriggerBackgroundSync() => _ = SyncNowAsync();
+
+    /// <summary>Segnala al motore di sync quale mese (ed eventualmente il mese di provenienza) è cambiato.</summary>
+    public void MarkTransactionDirty(Transaction transaction, DateTime? previousDate = null)
+        => _driveSync.MarkTransactionDirty(transaction, previousDate);
 
     /// <summary>
     /// Rimanda il sync di qualche secondo, riavviando il timer ad ogni chiamata:

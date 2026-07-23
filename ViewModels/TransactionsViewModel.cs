@@ -213,6 +213,7 @@ public partial class TransactionsViewModel : ObservableObject
         if (!confirm) return;
 
         await _database.DeleteTransactionAsync(transaction);
+        _autoSync.MarkTransactionDirty(transaction);
         _autoSync.TriggerDebouncedSync();
         await LoadAsync();
     }
