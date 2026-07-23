@@ -15,6 +15,7 @@ public partial class TransactionsViewModel : ObservableObject
     private readonly AutoSyncService _autoSync;
     private static readonly CultureInfo ItalianCulture = new("it-IT");
     private bool _suppressFilterReload;
+    private string? _lastLoadedSignature;
 
     public TransactionsViewModel(LocalDatabaseService database, AutoSyncService autoSync)
     {
@@ -31,6 +32,10 @@ public partial class TransactionsViewModel : ObservableObject
 
         if (Application.Current is not null)
             Application.Current.RequestedThemeChanged += (_, _) => OnPropertyChanged(nameof(EyeIconSource));
+
+        // Il sync periodico in background può portare modifiche fatte da un altro device: qui la
+        // griglia si aggiorna in silenzio (LoadAsync salta il ridisegno se in realtà nulla è cambiato).
+        _autoSync.SyncCompleted += () => MainThread.BeginInvokeOnMainThread(() => _ = LoadAsync());
     }
 
     public ObservableCollection<TransactionGroup> Groups { get; } = new();
@@ -107,11 +112,19 @@ public partial class TransactionsViewModel : ObservableObject
         IsBusy = true;
         try
         {
-            Balance = await _database.GetBalanceAsync();
+            var newBalance = await _database.GetBalanceAsync();
 
             var from = FilterFrom.Date;
             var to = FilterTo.Date.AddDays(1).AddTicks(-1);
             var transactions = await _database.GetTransactionsAsync(from, to);
+
+            // Un sync in background trova spesso nulla di nuovo per la vista corrente: evitare di
+            // ridisegnare la griglia in quei casi risparmia all'utente uno scroll-reset non necessario.
+            var signature = BuildSignature(newBalance, transactions);
+            if (signature == _lastLoadedSignature) return;
+            _lastLoadedSignature = signature;
+
+            Balance = newBalance;
 
             var grouped = transactions
                 .GroupBy(t => new DateTime(t.Date.Year, t.Date.Month, 1))
@@ -140,6 +153,15 @@ public partial class TransactionsViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    private static string BuildSignature(decimal balance, List<Transaction> transactions)
+    {
+        var sb = new System.Text.StringBuilder();
+        sb.Append(balance).Append('|');
+        foreach (var t in transactions)
+            sb.Append(t.Id).Append(':').Append(t.Amount).Append(':').Append(t.Description).Append(':').Append(t.Date.Ticks).Append(';');
+        return sb.ToString();
     }
 
     /// <summary>

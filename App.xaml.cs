@@ -21,8 +21,17 @@ public partial class App : Application
 		var window = new Window(new AppShell());
 		// Il contesto piattaforma (necessario a SecureStorage) non è ancora pronto nel costruttore di App:
 		// si aspetta Created, che scatta a finestra nativa creata.
-		window.Created += (_, _) => _autoSync.TriggerBackgroundSync();
-		window.Resumed += (_, _) => _autoSync.TriggerBackgroundSync();
+		window.Created += (_, _) =>
+		{
+			_autoSync.TriggerBackgroundSync();
+			_autoSync.StartPeriodicSync();
+		};
+		window.Resumed += (_, _) =>
+		{
+			_autoSync.TriggerBackgroundSync();
+			_autoSync.StartPeriodicSync();
+		};
+		window.Stopped += (_, _) => _autoSync.StopPeriodicSync();
 		return window;
 	}
 }
