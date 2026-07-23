@@ -87,4 +87,32 @@ public class LocalDatabaseService
         category.IsDeleted = true;
         await SaveCategoryAsync(category);
     }
+
+    /// <summary>Tutte le transazioni, incluse quelle cancellate (soft-delete) — per il sync con Drive.</summary>
+    public async Task<List<Transaction>> GetAllTransactionsRawAsync()
+    {
+        await EnsureInitializedAsync();
+        return await _connection.Table<Transaction>().ToListAsync();
+    }
+
+    /// <summary>Tutte le categorie, incluse quelle cancellate (soft-delete) — per il sync con Drive.</summary>
+    public async Task<List<Category>> GetAllCategoriesRawAsync()
+    {
+        await EnsureInitializedAsync();
+        return await _connection.Table<Category>().ToListAsync();
+    }
+
+    /// <summary>Scrive una transazione così com'è, senza toccare UpdatedAt — per scrivere il risultato di un merge sync.</summary>
+    public async Task SaveTransactionRawAsync(Transaction transaction)
+    {
+        await EnsureInitializedAsync();
+        await _connection.InsertOrReplaceAsync(transaction);
+    }
+
+    /// <summary>Scrive una categoria così com'è, senza toccare UpdatedAt — per scrivere il risultato di un merge sync.</summary>
+    public async Task SaveCategoryRawAsync(Category category)
+    {
+        await EnsureInitializedAsync();
+        await _connection.InsertOrReplaceAsync(category);
+    }
 }

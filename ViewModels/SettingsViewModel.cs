@@ -7,10 +7,14 @@ namespace Tirki.ViewModels;
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly HistoricalImportService _historicalImport;
+    private readonly GoogleAuthService _auth;
+    private readonly DriveSyncService _driveSync;
 
-    public SettingsViewModel(HistoricalImportService historicalImport)
+    public SettingsViewModel(HistoricalImportService historicalImport, GoogleAuthService auth, DriveSyncService driveSync)
     {
         _historicalImport = historicalImport;
+        _auth = auth;
+        _driveSync = driveSync;
 
         var savedTheme = Preferences.Default.Get(AppPreferenceKeys.Theme, nameof(AppTheme.Unspecified));
         _isInitializingTheme = true;
@@ -18,6 +22,8 @@ public partial class SettingsViewModel : ObservableObject
         IsDarkTheme = savedTheme == nameof(AppTheme.Dark);
         IsSystemTheme = savedTheme == nameof(AppTheme.Unspecified);
         _isInitializingTheme = false;
+
+        _ = RefreshSignInStateAsync();
     }
 
     private readonly bool _isInitializingTheme;
@@ -35,6 +41,15 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private bool isBusy;
+
+    [ObservableProperty]
+    private bool isSignedIn;
+
+    [ObservableProperty]
+    private string googleButtonText = "Accedi con Google";
+
+    [ObservableProperty]
+    private string syncStatus = string.Empty;
 
     partial void OnIsLightThemeChanged(bool value)
     {
@@ -59,13 +74,69 @@ public partial class SettingsViewModel : ObservableObject
         Preferences.Default.Set(AppPreferenceKeys.Theme, theme.ToString());
     }
 
+    private async Task RefreshSignInStateAsync()
+    {
+        IsSignedIn = await _auth.IsSignedInAsync();
+        GoogleButtonText = IsSignedIn ? "Disconnetti account Google" : "Accedi con Google";
+    }
+
     [RelayCommand]
     private async Task SignInWithGoogleAsync()
     {
-        await Shell.Current.DisplayAlertAsync(
-            "Accedi con Google",
-            "L'accesso con Google e la sincronizzazione su Drive arriveranno in una fase successiva.",
-            "OK");
+        if (IsBusy) return;
+
+        if (IsSignedIn)
+        {
+            var confirm = await Shell.Current.DisplayAlertAsync(
+                "Disconnetti",
+                "Vuoi scollegare il tuo account Google? La sincronizzazione con Drive si disattiverà.",
+                "Disconnetti",
+                "Annulla");
+
+            if (!confirm) return;
+
+            await _auth.SignOutAsync();
+            await RefreshSignInStateAsync();
+            return;
+        }
+
+        IsBusy = true;
+        try
+        {
+            await _auth.SignInAsync();
+            await RefreshSignInStateAsync();
+        }
+        catch (Exception ex)
+        {
+            await Shell.Current.DisplayAlertAsync("Errore accesso", ex.Message, "OK");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task SyncNowAsync()
+    {
+        if (IsBusy || !IsSignedIn) return;
+
+        IsBusy = true;
+        SyncStatus = "Sincronizzazione in corso...";
+        try
+        {
+            await _driveSync.SyncNowAsync();
+            SyncStatus = $"Ultima sincronizzazione: {DateTime.Now:dd/MM/yyyy HH:mm}";
+        }
+        catch (Exception ex)
+        {
+            SyncStatus = "Sincronizzazione non riuscita.";
+            await Shell.Current.DisplayAlertAsync("Errore sincronizzazione", ex.Message, "OK");
+        }
+        finally
+        {
+            IsBusy = false;
+        }
     }
 
     [RelayCommand]

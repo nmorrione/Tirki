@@ -13,6 +13,7 @@
             <converters:InverseBoolConverter x:Key="InverseBoolConverter" />
             <converters:CurrencyConverter x:Key="CurrencyConverter" />
             <converters:AmountBackgroundColorConverter x:Key="AmountBackgroundColorConverter" />
+            <converters:StringNotEmptyConverter x:Key="StringNotEmptyConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

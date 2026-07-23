@@ -19,7 +19,19 @@
 
             <VerticalStackLayout Spacing="8">
                 <Label Text="Account" FontAttributes="Bold" FontSize="14" Opacity="0.6" />
-                <Button Text="Accedi con Google" Command="{Binding SignInWithGoogleCommand}" />
+                <Button Text="{Binding GoogleButtonText}" Command="{Binding SignInWithGoogleCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
+                <Button
+                    Text="Sincronizza ora"
+                    Command="{Binding SyncNowCommand}"
+                    IsVisible="{Binding IsSignedIn}"
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                    BackgroundColor="Transparent"
+                    TextColor="{AppThemeBinding Light=#512BD4, Dark=White}" />
+                <Label
+                    Text="{Binding SyncStatus}"
+                    FontSize="12"
+                    Opacity="0.6"
+                    IsVisible="{Binding SyncStatus, Converter={StaticResource StringNotEmptyConverter}}" />
             </VerticalStackLayout>
 
             <VerticalStackLayout Spacing="8">
