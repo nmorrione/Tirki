@@ -26,6 +26,9 @@ public partial class TransactionsViewModel : ObservableObject
         _suppressFilterReload = false;
 
         isBalanceHidden = Preferences.Default.Get(BalanceHiddenKey, false);
+
+        if (Application.Current is not null)
+            Application.Current.RequestedThemeChanged += (_, _) => OnPropertyChanged(nameof(EyeIconSource));
     }
 
     public ObservableCollection<TransactionGroup> Groups { get; } = new();
@@ -36,12 +39,25 @@ public partial class TransactionsViewModel : ObservableObject
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DisplayBalance))]
-    [NotifyPropertyChangedFor(nameof(EyeGlyph))]
+    [NotifyPropertyChangedFor(nameof(EyeIconSource))]
     private bool isBalanceHidden;
 
     public string DisplayBalance => IsBalanceHidden ? "•••••• €" : Balance.ToString("C", ItalianCulture);
 
-    public string EyeGlyph => IsBalanceHidden ? "○" : "◉";
+    public string EyeIconSource
+    {
+        get
+        {
+            var isDark = Application.Current?.RequestedTheme == AppTheme.Dark;
+            return (IsBalanceHidden, isDark) switch
+            {
+                (false, false) => "icon_eye.svg",
+                (false, true) => "icon_eye_dark.svg",
+                (true, false) => "icon_eye_off.svg",
+                (true, true) => "icon_eye_off_dark.svg",
+            };
+        }
+    }
 
     [ObservableProperty]
     private bool isBusy;

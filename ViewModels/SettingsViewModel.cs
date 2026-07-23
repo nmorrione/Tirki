@@ -6,15 +6,13 @@ namespace Tirki.ViewModels;
 
 public partial class SettingsViewModel : ObservableObject
 {
-    private const string ThemePreferenceKey = "app_theme";
-
     private readonly HistoricalImportService _historicalImport;
 
     public SettingsViewModel(HistoricalImportService historicalImport)
     {
         _historicalImport = historicalImport;
 
-        var savedTheme = Preferences.Default.Get(ThemePreferenceKey, nameof(AppTheme.Unspecified));
+        var savedTheme = Preferences.Default.Get(AppPreferenceKeys.Theme, nameof(AppTheme.Unspecified));
         _isInitializingTheme = true;
         IsLightTheme = savedTheme == nameof(AppTheme.Light);
         IsDarkTheme = savedTheme == nameof(AppTheme.Dark);
@@ -58,7 +56,7 @@ public partial class SettingsViewModel : ObservableObject
         if (_isInitializingTheme) return;
         if (Application.Current is not null)
             Application.Current.UserAppTheme = theme;
-        Preferences.Default.Set(ThemePreferenceKey, theme.ToString());
+        Preferences.Default.Set(AppPreferenceKeys.Theme, theme.ToString());
     }
 
     [RelayCommand]

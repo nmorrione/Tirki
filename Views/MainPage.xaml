@@ -9,9 +9,9 @@
     Title="Tirki">
 
     <ContentPage.ToolbarItems>
-        <ToolbarItem Text="{Binding EyeGlyph}" Command="{Binding ToggleBalanceVisibilityCommand}" Order="Primary" Priority="0" />
-        <ToolbarItem Text="⚙" Command="{Binding OpenSettingsCommand}" Order="Primary" Priority="1" />
-        <ToolbarItem Text="+" Command="{Binding AddTransactionCommand}" Order="Primary" Priority="2" />
+        <ToolbarItem IconImageSource="{Binding EyeIconSource}" Command="{Binding ToggleBalanceVisibilityCommand}" Order="Primary" Priority="0" />
+        <ToolbarItem IconImageSource="{AppThemeBinding Light=icon_settings.svg, Dark=icon_settings_dark.svg}" Command="{Binding OpenSettingsCommand}" Order="Primary" Priority="1" />
+        <ToolbarItem IconImageSource="{AppThemeBinding Light=icon_plus.svg, Dark=icon_plus_dark.svg}" Command="{Binding AddTransactionCommand}" Order="Primary" Priority="2" />
     </ContentPage.ToolbarItems>
 
     <Grid RowDefinitions="Auto,Auto,Auto,*">
