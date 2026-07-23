@@ -1,5 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+	<!-- Password del keystore di firma release: file locale ignorato da git, vedi Signing.local.props.template -->
+	<Import Project="Signing.local.props" Condition="Exists('Signing.local.props')" />
+
 	<PropertyGroup>
 		<!-- Fase 1: solo Android. iOS/Windows verranno aggiunti in una fase successiva (vedi piano). -->
 		<TargetFrameworks>net10.0-android</TargetFrameworks>

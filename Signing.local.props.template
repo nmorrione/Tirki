@@ -1,0 +1,15 @@
+<Project>
+  <!--
+    Copia questo file in "Signing.local.props" (nome ignorato da git, vedi .gitignore)
+    e inserisci i valori veri del tuo keystore di firma release. Senza questo file la
+    build Release non è firmata: è voluto, impedisce che le password del keystore
+    finiscano per sbaglio nel codice tracciato da git.
+  -->
+  <PropertyGroup>
+    <AndroidKeyStore>True</AndroidKeyStore>
+    <AndroidSigningKeyStore>PERCORSO_ASSOLUTO_AL_KEYSTORE.keystore</AndroidSigningKeyStore>
+    <AndroidSigningKeyAlias>tirki</AndroidSigningKeyAlias>
+    <AndroidSigningKeyPass>INSERISCI_QUI_LA_PASSWORD</AndroidSigningKeyPass>
+    <AndroidSigningStorePass>INSERISCI_QUI_LA_PASSWORD</AndroidSigningStorePass>
+  </PropertyGroup>
+</Project>

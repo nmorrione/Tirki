@@ -364,3 +364,6 @@ FodyWeavers.xsd
 
 # Google OAuth client secret: mai su git, vedi GoogleAuthService.Secrets.cs.template
 Services/GoogleAuthService.Secrets.cs
+
+# Password del keystore di firma release: mai su git, vedi Signing.local.props.template
+Signing.local.props
