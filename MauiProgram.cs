@@ -16,6 +16,20 @@ public static class MauiProgram
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
+			})
+			.ConfigureMauiHandlers(handlers =>
+			{
+#if ANDROID
+				// Il filtro nativo di Android per la tastiera numerica accetta solo il punto come
+				// separatore decimale, indipendentemente dai tasti mostrati a schermo: su tastiera
+				// italiana (virgola) il carattere digitato viene scartato in silenzio. Si estende
+				// qui l'elenco dei caratteri accettati a entrambi i separatori.
+				Microsoft.Maui.Handlers.EntryHandler.Mapper.AppendToMapping("NumericAllowDecimalComma", (handler, view) =>
+				{
+					if (view.Keyboard == Keyboard.Numeric)
+						handler.PlatformView.KeyListener = Android.Text.Method.DigitsKeyListener.GetInstance("0123456789.,");
+				});
+#endif
 			});
 
 		builder.Services.AddSingleton<LocalDatabaseService>();

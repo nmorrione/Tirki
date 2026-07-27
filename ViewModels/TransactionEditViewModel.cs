@@ -10,6 +10,13 @@ namespace Tirki.ViewModels;
 [QueryProperty(nameof(Id), "Id")]
 public partial class TransactionEditViewModel : ObservableObject
 {
+    private static readonly CultureInfo ItalianCulture = new("it-IT");
+
+    // Niente AllowThousands: senza, un separatore come "," o "." può significare solo "decimale",
+    // mai "migliaia" — evita l'ambiguità che farebbe leggere "12,50" come 1250.
+    private const NumberStyles AmountNumberStyles =
+        NumberStyles.AllowLeadingWhite | NumberStyles.AllowTrailingWhite | NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint;
+
     private readonly LocalDatabaseService _database;
     private readonly AutoSyncService _autoSync;
     private Transaction _transaction = new();
@@ -71,7 +78,24 @@ public partial class TransactionEditViewModel : ObservableObject
         Date = existing.Date;
         Description = existing.Description;
         IsIncome = existing.Amount > 0;
-        AmountText = Math.Abs(existing.Amount).ToString(CultureInfo.InvariantCulture);
+        AmountText = Math.Abs(existing.Amount).ToString(ItalianCulture);
+    }
+
+    /// <summary>
+    /// Accetta sia la virgola (tastiera numerica italiana) sia il punto come separatore decimale.
+    /// Usa esplicitamente it-IT invece di CultureInfo.CurrentCulture: quest'ultima non riflette
+    /// in modo affidabile la lingua del device sul runtime .NET per Android.
+    /// </summary>
+    private static bool TryParseAmount(string text, out decimal amount)
+    {
+        text = text.Trim();
+        if (decimal.TryParse(text, AmountNumberStyles, ItalianCulture, out amount))
+            return true;
+        if (decimal.TryParse(text, AmountNumberStyles, CultureInfo.InvariantCulture, out amount))
+            return true;
+
+        var normalized = text.Replace(',', '.');
+        return decimal.TryParse(normalized, AmountNumberStyles, CultureInfo.InvariantCulture, out amount);
     }
 
     private async Task<decimal?> ValidateAndParseAmountAsync()
@@ -82,7 +106,7 @@ public partial class TransactionEditViewModel : ObservableObject
             return null;
         }
 
-        if (!decimal.TryParse(AmountText, NumberStyles.Number, CultureInfo.InvariantCulture, out var amount) || amount <= 0)
+        if (!TryParseAmount(AmountText, out var amount) || amount <= 0)
         {
             await Shell.Current.DisplayAlertAsync("Attenzione", "Inserisci un importo valido maggiore di zero.", "OK");
             return null;
@@ -119,7 +143,7 @@ public partial class TransactionEditViewModel : ObservableObject
     private void ApplyPreset(TransactionPreset preset)
     {
         Description = preset.Description;
-        AmountText = Math.Abs(preset.Amount).ToString(CultureInfo.InvariantCulture);
+        AmountText = Math.Abs(preset.Amount).ToString(ItalianCulture);
         IsIncome = preset.Amount > 0;
     }
 
