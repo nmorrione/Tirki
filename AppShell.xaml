@@ -18,6 +18,12 @@
             Icon="{AppThemeBinding Light=icon_stats.svg, Dark=icon_stats_dark.svg}"
             ContentTemplate="{DataTemplate views:CategoryStatsPage}"
             Route="CategoryStatsPage" />
+
+        <ShellContent
+            Title="Andamento"
+            Icon="{AppThemeBinding Light=icon_trend.svg, Dark=icon_trend_dark.svg}"
+            ContentTemplate="{DataTemplate views:TrendPage}"
+            Route="TrendPage" />
     </TabBar>
 
 </Shell>

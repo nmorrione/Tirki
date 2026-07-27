@@ -54,6 +54,8 @@ public static class MauiProgram
 		builder.Services.AddTransient<CategoryEditPage>();
 		builder.Services.AddTransient<CategoryStatsViewModel>();
 		builder.Services.AddTransient<CategoryStatsPage>();
+		builder.Services.AddTransient<TrendViewModel>();
+		builder.Services.AddTransient<TrendPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();
