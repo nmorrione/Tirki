@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="Tirki.Views.LockPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    Shell.NavBarIsVisible="False"
+    BackgroundColor="{AppThemeBinding Light=#512BD4, Dark=#3D1F9E}">
+
+    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="20" Padding="40">
+        <Label Text="Tirki" TextColor="White" FontSize="34" FontAttributes="Bold" HorizontalTextAlignment="Center" />
+        <Label Text="App bloccata" TextColor="White" Opacity="0.8" FontSize="16" HorizontalTextAlignment="Center" />
+        <Button x:Name="UnlockButton" Text="Sblocca" Clicked="OnUnlockClicked" Margin="0,20,0,0" BackgroundColor="White" TextColor="#512BD4" />
+    </VerticalStackLayout>
+
+</ContentPage>

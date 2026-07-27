@@ -9,12 +9,15 @@ public partial class SettingsViewModel : ObservableObject
     private readonly HistoricalImportService _historicalImport;
     private readonly GoogleAuthService _auth;
     private readonly AutoSyncService _autoSync;
+    private readonly IBiometricAuthService _biometric;
+    private bool _isInitializingAppLock;
 
-    public SettingsViewModel(HistoricalImportService historicalImport, GoogleAuthService auth, AutoSyncService autoSync)
+    public SettingsViewModel(HistoricalImportService historicalImport, GoogleAuthService auth, AutoSyncService autoSync, IBiometricAuthService biometric)
     {
         _historicalImport = historicalImport;
         _auth = auth;
         _autoSync = autoSync;
+        _biometric = biometric;
 
         var savedTheme = Preferences.Default.Get(AppPreferenceKeys.Theme, nameof(AppTheme.Unspecified));
         _isInitializingTheme = true;
@@ -50,6 +53,12 @@ public partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty]
     private string syncStatus = string.Empty;
+
+    [ObservableProperty]
+    private bool isAppLockEnabled;
+
+    [ObservableProperty]
+    private bool isBiometricAvailable;
 
     partial void OnIsLightThemeChanged(bool value)
     {
@@ -89,6 +98,42 @@ public partial class SettingsViewModel : ObservableObject
             SyncStatus = lastKnownStatus;
 
         _ = RefreshSignInStateAsync();
+        _ = RefreshAppLockStateAsync();
+    }
+
+    private async Task RefreshAppLockStateAsync()
+    {
+        IsBiometricAvailable = await _biometric.IsAvailableAsync();
+
+        _isInitializingAppLock = true;
+        IsAppLockEnabled = IsBiometricAvailable && Preferences.Default.Get(AppPreferenceKeys.BiometricLockEnabled, false);
+        _isInitializingAppLock = false;
+    }
+
+    partial void OnIsAppLockEnabledChanged(bool value)
+    {
+        if (_isInitializingAppLock) return;
+        _ = ApplyAppLockChangeAsync(value);
+    }
+
+    private async Task ApplyAppLockChangeAsync(bool enabled)
+    {
+        if (!enabled)
+        {
+            Preferences.Default.Set(AppPreferenceKeys.BiometricLockEnabled, false);
+            return;
+        }
+
+        var confirmed = await _biometric.AuthenticateAsync("Conferma per attivare il blocco dell'app");
+        if (!confirmed)
+        {
+            _isInitializingAppLock = true;
+            IsAppLockEnabled = false;
+            _isInitializingAppLock = false;
+            return;
+        }
+
+        Preferences.Default.Set(AppPreferenceKeys.BiometricLockEnabled, true);
     }
 
     public void OnDisappearing()

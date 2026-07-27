@@ -39,6 +39,9 @@ public static class MauiProgram
 		builder.Services.AddSingleton<LocalDatabaseService>();
 		builder.Services.AddSingleton<HistoricalImportService>();
 		builder.Services.AddSingleton<CategorySuggestionService>();
+#if ANDROID
+		builder.Services.AddSingleton<IBiometricAuthService, Tirki.Platforms.Android.BiometricAuthService>();
+#endif
 		builder.Services.AddSingleton<GoogleAuthService>();
 		builder.Services.AddSingleton<DriveSyncService>();
 		builder.Services.AddSingleton<AutoSyncService>();
@@ -56,6 +59,7 @@ public static class MauiProgram
 		builder.Services.AddTransient<CategoryStatsPage>();
 		builder.Services.AddTransient<TrendViewModel>();
 		builder.Services.AddTransient<TrendPage>();
+		builder.Services.AddTransient<Views.LockPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

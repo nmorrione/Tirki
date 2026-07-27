@@ -18,6 +18,19 @@
             </VerticalStackLayout>
 
             <VerticalStackLayout Spacing="8">
+                <Label Text="Sicurezza" FontAttributes="Bold" FontSize="14" Opacity="0.6" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0" Text="Blocco con impronta o PIN" VerticalOptions="Center" />
+                    <Switch Grid.Column="1" IsToggled="{Binding IsAppLockEnabled}" IsEnabled="{Binding IsBiometricAvailable}" />
+                </Grid>
+                <Label
+                    Text="Il tuo dispositivo non ha un'impronta o un PIN/pattern configurati: impostane uno nelle impostazioni di sistema per poter attivare il blocco."
+                    FontSize="12"
+                    Opacity="0.6"
+                    IsVisible="{Binding IsBiometricAvailable, Converter={StaticResource InverseBoolConverter}}" />
+            </VerticalStackLayout>
+
+            <VerticalStackLayout Spacing="8">
                 <Label Text="Account" FontAttributes="Bold" FontSize="14" Opacity="0.6" />
                 <Button Text="{Binding GoogleButtonText}" Command="{Binding SignInWithGoogleCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}" />
                 <Button

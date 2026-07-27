@@ -5,4 +5,5 @@ public static class AppPreferenceKeys
 {
     public const string Theme = "app_theme";
     public const string CategoriesSeeded = "categories_seeded";
+    public const string BiometricLockEnabled = "biometric_lock_enabled";
 }
