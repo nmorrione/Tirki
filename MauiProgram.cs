@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using LiveChartsCore.SkiaSharpView.Maui;
+using Microsoft.Extensions.Logging;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 using Tirki.Services;
 using Tirki.ViewModels;
 using Tirki.Views;
@@ -12,6 +14,8 @@ public static class MauiProgram
 		var builder = MauiApp.CreateBuilder();
 		builder
 			.UseMauiApp<App>()
+			.UseSkiaSharp()
+			.UseLiveCharts()
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -34,6 +38,7 @@ public static class MauiProgram
 
 		builder.Services.AddSingleton<LocalDatabaseService>();
 		builder.Services.AddSingleton<HistoricalImportService>();
+		builder.Services.AddSingleton<CategorySuggestionService>();
 		builder.Services.AddSingleton<GoogleAuthService>();
 		builder.Services.AddSingleton<DriveSyncService>();
 		builder.Services.AddSingleton<AutoSyncService>();
@@ -43,6 +48,12 @@ public static class MauiProgram
 		builder.Services.AddTransient<TransactionEditPage>();
 		builder.Services.AddTransient<SettingsViewModel>();
 		builder.Services.AddTransient<SettingsPage>();
+		builder.Services.AddTransient<CategoriesViewModel>();
+		builder.Services.AddTransient<CategoriesPage>();
+		builder.Services.AddTransient<CategoryEditViewModel>();
+		builder.Services.AddTransient<CategoryEditPage>();
+		builder.Services.AddTransient<CategoryStatsViewModel>();
+		builder.Services.AddTransient<CategoryStatsPage>();
 
 #if DEBUG
 		builder.Logging.AddDebug();

@@ -19,17 +19,22 @@ public partial class TransactionEditViewModel : ObservableObject
 
     private readonly LocalDatabaseService _database;
     private readonly AutoSyncService _autoSync;
+    private readonly CategorySuggestionService _categorySuggestion;
     private Transaction _transaction = new();
     private DateTime? _originalDate;
 
-    public TransactionEditViewModel(LocalDatabaseService database, AutoSyncService autoSync)
+    public TransactionEditViewModel(LocalDatabaseService database, AutoSyncService autoSync, CategorySuggestionService categorySuggestion)
     {
         _database = database;
         _autoSync = autoSync;
+        _categorySuggestion = categorySuggestion;
         _ = LoadPresetsAsync();
+        _ = LoadCategoriesAsync();
     }
 
     public ObservableCollection<TransactionPreset> Presets { get; } = new();
+
+    public ObservableCollection<Category> Categories { get; } = new();
 
     [ObservableProperty]
     private string? id;
@@ -42,6 +47,9 @@ public partial class TransactionEditViewModel : ObservableObject
 
     [ObservableProperty]
     private string amountText = string.Empty;
+
+    [ObservableProperty]
+    private Category? selectedCategory;
 
     [ObservableProperty]
     private bool isIncome;
@@ -65,6 +73,7 @@ public partial class TransactionEditViewModel : ObservableObject
             _originalDate = null;
             IsExisting = false;
             Title = "Nuova transazione";
+            SelectedCategory = null;
             return;
         }
 
@@ -79,6 +88,41 @@ public partial class TransactionEditViewModel : ObservableObject
         Description = existing.Description;
         IsIncome = existing.Amount > 0;
         AmountText = Math.Abs(existing.Amount).ToString(ItalianCulture);
+        SelectedCategory = existing.CategoryId is { } categoryId
+            ? Categories.FirstOrDefault(c => c.Id == categoryId)
+            : null;
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        var categories = await _database.GetCategoriesAsync();
+        Categories.Clear();
+        foreach (var category in categories)
+            Categories.Add(category);
+
+        // Se le categorie sono state caricate dopo LoadAsync (stessa corsa in parallelo al costruttore),
+        // recupera qui il match per categoria già assegnata a una transazione esistente.
+        if (_transaction.CategoryId is { } categoryId && SelectedCategory is null)
+            SelectedCategory = Categories.FirstOrDefault(c => c.Id == categoryId);
+    }
+
+    partial void OnDescriptionChanged(string value)
+    {
+        if (SelectedCategory is not null) return;
+        _ = ApplySuggestedCategoryAsync(value);
+    }
+
+    private async Task ApplySuggestedCategoryAsync(string description)
+    {
+        var suggestedId = await _categorySuggestion.SuggestCategoryAsync(description);
+        if (suggestedId is null || SelectedCategory is not null) return;
+        SelectedCategory = Categories.FirstOrDefault(c => c.Id == suggestedId);
+    }
+
+    [RelayCommand]
+    private void SelectCategory(Category category)
+    {
+        SelectedCategory = SelectedCategory?.Id == category.Id ? null : category;
     }
 
     /// <summary>
@@ -124,6 +168,7 @@ public partial class TransactionEditViewModel : ObservableObject
         _transaction.Date = Date;
         _transaction.Description = Description.Trim();
         _transaction.Amount = IsIncome ? amount.Value : -amount.Value;
+        _transaction.CategoryId = SelectedCategory?.Id;
 
         await _database.SaveTransactionAsync(_transaction);
         _autoSync.MarkTransactionDirty(_transaction, _originalDate);
@@ -145,6 +190,9 @@ public partial class TransactionEditViewModel : ObservableObject
         Description = preset.Description;
         AmountText = Math.Abs(preset.Amount).ToString(ItalianCulture);
         IsIncome = preset.Amount > 0;
+        SelectedCategory = preset.CategoryId is { } categoryId
+            ? Categories.FirstOrDefault(c => c.Id == categoryId)
+            : null;
     }
 
     [RelayCommand]
@@ -157,6 +205,7 @@ public partial class TransactionEditViewModel : ObservableObject
         {
             Description = Description.Trim(),
             Amount = IsIncome ? amount.Value : -amount.Value,
+            CategoryId = SelectedCategory?.Id,
         };
 
         await _database.SavePresetAsync(preset);

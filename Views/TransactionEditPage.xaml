@@ -26,6 +26,33 @@
             <Label Text="Importo" FontAttributes="Bold" />
             <Entry Text="{Binding AmountText}" Keyboard="Numeric" Placeholder="0,00" />
 
+            <Label Text="Categoria" FontAttributes="Bold" IsVisible="{Binding Categories.Count}" />
+            <CollectionView ItemsSource="{Binding Categories}" ItemsLayout="HorizontalList" IsVisible="{Binding Categories.Count}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:Category">
+                        <Border
+                            StrokeShape="RoundRectangle 16"
+                            Stroke="Transparent"
+                            Padding="12,8"
+                            Margin="0,0,8,0"
+                            BackgroundColor="{Binding ColorHex}">
+                            <Border.Opacity>
+                                <MultiBinding Converter="{StaticResource CategorySelectedConverter}">
+                                    <Binding Path="." />
+                                    <Binding Path="SelectedCategory" Source="{RelativeSource AncestorType={x:Type vm:TransactionEditViewModel}}" />
+                                </MultiBinding>
+                            </Border.Opacity>
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer
+                                    Command="{Binding Source={RelativeSource AncestorType={x:Type vm:TransactionEditViewModel}}, Path=SelectCategoryCommand}"
+                                    CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <Label Text="{Binding Name}" TextColor="White" FontSize="13" />
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
             <Button Text="Salva" Command="{Binding SaveCommand}" Margin="0,20,0,0" />
             <Button Text="Salva come preset" Command="{Binding SaveAsPresetCommand}" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#512BD4, Dark=White}" FontSize="13" />
             <Button Text="Annulla" Command="{Binding CancelCommand}" BackgroundColor="Transparent" TextColor="{AppThemeBinding Light=#512BD4, Dark=White}" />

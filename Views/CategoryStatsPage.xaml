@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ContentPage
+    x:Class="Tirki.Views.CategoryStatsPage"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:Tirki.ViewModels"
+    xmlns:lvc="clr-namespace:LiveChartsCore.SkiaSharpView.Maui;assembly=LiveChartsCore.SkiaSharpView.Maui"
+    x:DataType="vm:CategoryStatsViewModel"
+    Title="Categorie">
+
+    <ContentPage.ToolbarItems>
+        <ToolbarItem IconImageSource="{AppThemeBinding Light=icon_manage.svg, Dark=icon_manage_dark.svg}" Command="{Binding ManageCategoriesCommand}" />
+    </ContentPage.ToolbarItems>
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="0">
+
+            <Grid Padding="16,10" ColumnDefinitions="*,*,Auto" ColumnSpacing="10" BackgroundColor="{AppThemeBinding Light=#F2F2F7, Dark=#1C1C1E}">
+                <VerticalStackLayout Grid.Column="0" Spacing="0">
+                    <Label Text="Da" FontSize="11" Opacity="0.6" />
+                    <DatePicker Date="{Binding FilterFrom}" Format="dd/MM/yyyy" FontSize="13" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="0">
+                    <Label Text="A" FontSize="11" Opacity="0.6" />
+                    <DatePicker Date="{Binding FilterTo}" Format="dd/MM/yyyy" FontSize="13" />
+                </VerticalStackLayout>
+                <Button
+                    Grid.Column="2"
+                    Text="Mese corrente"
+                    Command="{Binding SetCurrentMonthCommand}"
+                    FontSize="12"
+                    VerticalOptions="Center" />
+            </Grid>
+
+            <Grid Padding="20,16" ColumnDefinitions="*,*">
+                <VerticalStackLayout Grid.Column="0" Spacing="2">
+                    <Label Text="Entrate" FontSize="12" Opacity="0.6" />
+                    <Label Text="{Binding TotalIncome, Converter={StaticResource CurrencyConverter}}" FontSize="18" FontAttributes="Bold" TextColor="#4CAF50" />
+                </VerticalStackLayout>
+                <VerticalStackLayout Grid.Column="1" Spacing="2">
+                    <Label Text="Uscite" FontSize="12" Opacity="0.6" />
+                    <Label Text="{Binding TotalExpense, Converter={StaticResource CurrencyConverter}}" FontSize="18" FontAttributes="Bold" TextColor="#D9534F" />
+                </VerticalStackLayout>
+            </Grid>
+
+            <Label
+                Text="Nessuna spesa categorizzata nel periodo selezionato."
+                Padding="20,10"
+                Opacity="0.6"
+                HorizontalTextAlignment="Center"
+                IsVisible="{Binding HasExpenses, Converter={StaticResource InverseBoolConverter}}" />
+
+            <lvc:PieChart Series="{Binding Series}" HeightRequest="240" Margin="20,10" IsVisible="{Binding HasExpenses}" />
+
+            <VerticalStackLayout Padding="20,10" Spacing="12" IsVisible="{Binding HasExpenses}">
+                <CollectionView ItemsSource="{Binding Rows}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="vm:CategoryStatRow">
+                            <Grid Padding="0,8" ColumnDefinitions="Auto,*,Auto">
+                                <BoxView
+                                    Grid.Column="0"
+                                    BackgroundColor="{Binding ColorHex}"
+                                    WidthRequest="14"
+                                    HeightRequest="14"
+                                    CornerRadius="7"
+                                    VerticalOptions="Center" />
+                                <Label Grid.Column="1" Text="{Binding Name}" Margin="10,0,0,0" VerticalOptions="Center" />
+                                <Label Grid.Column="2" Text="{Binding Total, Converter={StaticResource CurrencyConverter}}" FontAttributes="Bold" VerticalOptions="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

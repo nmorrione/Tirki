@@ -14,6 +14,8 @@
             <converters:CurrencyConverter x:Key="CurrencyConverter" />
             <converters:AmountBackgroundColorConverter x:Key="AmountBackgroundColorConverter" />
             <converters:StringNotEmptyConverter x:Key="StringNotEmptyConverter" />
+            <converters:CategorySelectedConverter x:Key="CategorySelectedConverter" />
+            <converters:StringEqualsConverter x:Key="StringEqualsConverter" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

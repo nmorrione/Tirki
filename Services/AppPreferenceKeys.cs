@@ -4,4 +4,5 @@ namespace Tirki.Services;
 public static class AppPreferenceKeys
 {
     public const string Theme = "app_theme";
+    public const string CategoriesSeeded = "categories_seeded";
 }

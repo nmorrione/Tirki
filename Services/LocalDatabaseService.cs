@@ -15,11 +15,53 @@ public class LocalDatabaseService
         _initialization = InitializeAsync();
     }
 
+    /// <summary>
+    /// Categorie precompilate al primo avvio, derivate analizzando le descrizioni ricorrenti nello
+    /// storico reale di spese dell'utente (spesa/ristoranti/trasporti/casa/ecc.), così chi installa
+    /// l'app da zero parte con categorie sensate invece che vuote.
+    /// </summary>
+    private static readonly (string Name, string ColorHex)[] DefaultCategories =
+    [
+        ("Spesa", "#4CAF50"),
+        ("Ristoranti e bar", "#FF7043"),
+        ("Trasporti", "#2196F3"),
+        ("Casa e bollette", "#795548"),
+        ("Salute e benessere", "#E53935"),
+        ("Svago e tempo libero", "#FFB300"),
+        ("Abbonamenti", "#8E24AA"),
+        ("Regali", "#EC407A"),
+        ("Shopping", "#26A69A"),
+        ("Stipendio", "#009688"),
+        ("Investimenti", "#3949AB"),
+        ("Altro", "#9E9E9E"),
+    ];
+
     private async Task InitializeAsync()
     {
         await _connection.CreateTableAsync<Transaction>();
         await _connection.CreateTableAsync<Category>();
         await _connection.CreateTableAsync<TransactionPreset>();
+        await SeedDefaultCategoriesIfNeededAsync();
+    }
+
+    /// <summary>
+    /// Una tantum: se non è mai stato fatto, precompila le categorie di default. Il flag (non il
+    /// semplice "tabella vuota") evita che ricompaiano se l'utente le cancella tutte di proposito.
+    /// </summary>
+    private async Task SeedDefaultCategoriesIfNeededAsync()
+    {
+        if (Preferences.Default.Get(AppPreferenceKeys.CategoriesSeeded, false)) return;
+
+        foreach (var (name, colorHex) in DefaultCategories)
+        {
+            await _connection.InsertOrReplaceAsync(new Category
+            {
+                Name = name,
+                ColorHex = colorHex,
+            });
+        }
+
+        Preferences.Default.Set(AppPreferenceKeys.CategoriesSeeded, true);
     }
 
     private async Task EnsureInitializedAsync() => await _initialization;

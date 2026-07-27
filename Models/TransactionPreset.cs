@@ -13,6 +13,8 @@ public class TransactionPreset
     /// <summary>Segno indica entrata (positivo) o uscita (negativo), come in Transaction.</summary>
     public decimal Amount { get; set; }
 
+    public Guid? CategoryId { get; set; }
+
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     public bool IsDeleted { get; set; }

@@ -6,9 +6,18 @@
     xmlns:views="clr-namespace:Tirki.Views"
     Title="Tirki">
 
-    <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate views:MainPage}"
-        Route="MainPage" />
+    <TabBar>
+        <ShellContent
+            Title="Home"
+            Icon="{AppThemeBinding Light=icon_home.svg, Dark=icon_home_dark.svg}"
+            ContentTemplate="{DataTemplate views:MainPage}"
+            Route="MainPage" />
+
+        <ShellContent
+            Title="Categorie"
+            Icon="{AppThemeBinding Light=icon_stats.svg, Dark=icon_stats_dark.svg}"
+            ContentTemplate="{DataTemplate views:CategoryStatsPage}"
+            Route="CategoryStatsPage" />
+    </TabBar>
 
 </Shell>
